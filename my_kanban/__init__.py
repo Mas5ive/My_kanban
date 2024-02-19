@@ -34,4 +34,7 @@ def create_app(test_config=None):
     sqla.init_app(app)
     jwt.init_app(app)
 
+    from .data.db import init_app
+    init_app(app)
+
     return app
