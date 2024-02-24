@@ -37,7 +37,8 @@ def create_app(test_config=None):
     from .data.db import init_app
     init_app(app)
 
-    from . import auth
+    from . import auth, profile
     app.register_blueprint(auth.bp)
+    app.register_blueprint(profile.bp)
 
     return app
