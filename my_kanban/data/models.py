@@ -26,6 +26,7 @@ class Board(sqla.Model):
     title = Column(String, nullable=False)
 
     users = relationship('User', secondary=user_board, back_populates='boards')
+    cards = relationship('Card', back_populates='board', cascade='all, delete')
 
 
 class Invitation(sqla.Model):
@@ -37,3 +38,14 @@ class Invitation(sqla.Model):
     __table_args__ = (
         CheckConstraint("user_sender <> user_recipient"),
     )
+
+
+class Card(sqla.Model):
+    __tablename__ = 'card'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    board_id = Column(Integer, ForeignKey('board.id', ondelete='CASCADE'), nullable=False)
+    title = Column(String, nullable=False)
+    content = Column(String)
+    status = Column(Integer, default=0)
+
+    board = relationship('Board', uselist=False)
