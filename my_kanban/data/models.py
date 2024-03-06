@@ -27,6 +27,7 @@ class Board(sqla.Model):
 
     users = relationship('User', secondary=user_board, back_populates='boards')
     cards = relationship('Card', back_populates='board', cascade='all, delete')
+    invitations = relationship('Invitation', cascade='all, delete')
 
 
 class Invitation(sqla.Model):
