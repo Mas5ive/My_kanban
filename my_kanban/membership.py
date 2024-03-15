@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from my_kanban import sqla
 
 from .data.models import Invitation, User, user_board
+from .utils import get_board_info
 
 bp = Blueprint('membership', __name__)
 
@@ -13,15 +14,9 @@ bp = Blueprint('membership', __name__)
 @bp.route('/boards/<int:board_id>/invitations', methods=['POST'])
 @jwt_required()
 def сreate_invitation(board_id):
-    board_info = sqla.session.execute(
-        select(user_board).
-        where(user_board.c.board_id == board_id)
-    ).all()
-
-    if board_info == []:
-        abort(404)
-
+    board_info = get_board_info(board_id)
     sender = get_jwt_identity()
+
     if not any(info.is_owner for info in board_info if info.username == sender):
         abort(403)
 
@@ -56,15 +51,9 @@ def delete_member(board_id):
     if not request.form.get('_method') == 'DELETE':
         abort(405)
 
-    board_info = sqla.session.execute(
-        select(user_board).
-        where(user_board.c.board_id == board_id)
-    ).all()
-
-    if board_info == []:
-        abort(404)
-
+    board_info = get_board_info(board_id)
     username = get_jwt_identity()
+
     if not any(info.is_owner for info in board_info if info.username == username):
         abort(403)
 
@@ -89,7 +78,6 @@ def delete_member(board_id):
 @jwt_required()
 def pick_invitation():
     username = get_jwt_identity()
-
     board_id = request.form['board']
 
     invitation = sqla.session.execute(

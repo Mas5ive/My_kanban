@@ -7,6 +7,8 @@ from my_kanban import sqla
 
 from .data.models import Board, user_board
 
+from .utils import get_board_info
+
 bp = Blueprint('board', __name__)
 
 
@@ -15,18 +17,9 @@ bp = Blueprint('board', __name__)
 def handle(board_id):
     board_info = get_board_info(board_id)
     username = get_jwt_identity()
+    user_board_info = next((info for info in board_info if info.username == username), None)
 
-    board_info = sqla.session.execute(
-        select(user_board).
-        where(user_board.c.board_id == board_id)
-    ).all()
-
-    if board_info == []:
-        abort(404)
-
-    board_info = next((info for info in board_info if info.username == username), None)
-
-    if board_info is None:
+    if user_board_info is None:
         abort(403)
 
     def get_board():
@@ -37,7 +30,7 @@ def handle(board_id):
         ).unique().scalar_one()
 
     if request.method == 'POST':
-        if board_info.is_owner and request.form.get('_method') == 'DELETE':
+        if user_board_info.is_owner and request.form.get('_method') == 'DELETE':
             sqla.session.delete(get_board())
             sqla.session.commit()
             return redirect(url_for("profile.show"), 303)

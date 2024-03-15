@@ -7,19 +7,9 @@ from sqlalchemy import Row, select
 from my_kanban import sqla
 
 from .data.models import Card, user_board
+from .utils import get_board_info
 
 bp = Blueprint('card', __name__, url_prefix='/boards')
-
-
-def get_board_info(board_id: int, username: str) -> Row[Any]:
-    board_info = sqla.session.execute(
-        select(user_board).
-        where(user_board.c.board_id == board_id, user_board.c.username == username)
-    ).one_or_none()
-
-    if not board_info:
-        abort(403)
-    return board_info
 
 
 def get_card(board_id: int, card_id: int) -> Card:
@@ -73,15 +63,9 @@ def edit_card(card: Card, title: str, content: str, board_info: Row[Any]) -> Non
 @bp.route('/<int:board_id>/cards', methods=['GET', 'POST'])
 @jwt_required()
 def create(board_id):
-    board_info = sqla.session.execute(
-        select(user_board).
-        where(user_board.c.board_id == board_id)
-    ).all()
-
-    if board_info == []:
-        abort(404)
-
+    board_info = get_board_info(board_id)
     username = get_jwt_identity()
+
     if not any(info.is_owner for info in board_info if info.username == username):
         abort(403)
 
@@ -105,7 +89,14 @@ def create(board_id):
 def handle(board_id, card_id):
     card = get_card(board_id, card_id)
     username = get_jwt_identity()
-    board_info = get_board_info(board_id, username)
+
+    user_info = sqla.session.execute(
+        select(user_board).
+        where(user_board.c.board_id == board_id, user_board.c.username == username)
+    ).one_or_none()
+
+    if not user_info:
+        abort(403)
 
     if request.method == 'POST':
         operation = request.form['operation']
