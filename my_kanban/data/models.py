@@ -1,5 +1,7 @@
-from sqlalchemy import CheckConstraint, Column, ForeignKey, Integer, String, Table
+from sqlalchemy import (CheckConstraint, Column, DateTime, ForeignKey, Integer,
+                        String, Table)
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 
 from my_kanban import sqla
 
@@ -50,3 +52,15 @@ class Card(sqla.Model):
     status = Column(Integer, default=0)
 
     board = relationship('Board', uselist=False)
+    comments = relationship('Comment', back_populates='card', cascade='all , delete')
+
+
+class Comment(sqla.Model):
+    __tablename__ = 'comment'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    author = Column(String, ForeignKey('user.name', ondelete='CASCADE'), nullable=False)
+    card_id = Column(Integer, ForeignKey('card.id', ondelete='CASCADE'), nullable=False)
+    content = Column(String, nullable=False)
+    date = Column(DateTime, nullable=False, default=func.now())
+
+    card = relationship('Card', uselist=False)
