@@ -3,7 +3,7 @@ from sqlalchemy import select
 
 from my_kanban import sqla
 
-from .data.models import user_board
+from .data.models import Card, user_board
 
 
 def get_board_info(board_id: int):
@@ -16,3 +16,15 @@ def get_board_info(board_id: int):
         abort(404)
 
     return board_info
+
+
+def get_card(board_id: int, card_id: int) -> Card:
+    card = sqla.session.execute(
+        select(Card).
+        where(Card.board_id == board_id, Card.id == card_id)
+    ).scalar_one_or_none()
+
+    if not card:
+        abort(404)
+
+    return card

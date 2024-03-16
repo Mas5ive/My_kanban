@@ -6,20 +6,9 @@ from sqlalchemy import select
 from my_kanban import sqla
 
 from .data.models import Card, user_board
-from .utils import get_board_info
+from .utils import get_board_info, get_card
 
 bp = Blueprint('card', __name__, url_prefix='/boards')
-
-
-def get_card(board_id: int, card_id: int) -> Card:
-    card = sqla.session.execute(
-        select(Card).
-        where(Card.board_id == board_id, Card.id == card_id)
-    ).scalar_one_or_none()
-
-    if not card:
-        abort(404)
-    return card
 
 
 def delete_card(card: Card, user_is_owner: int) -> None:

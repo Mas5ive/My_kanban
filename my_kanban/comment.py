@@ -4,7 +4,8 @@ from sqlalchemy import select
 
 from my_kanban import sqla
 
-from .data.models import Card, Comment, user_board
+from .data.models import Comment, user_board
+from .utils import get_card
 
 bp = Blueprint('comment', __name__, url_prefix='/boards')
 
@@ -12,14 +13,7 @@ bp = Blueprint('comment', __name__, url_prefix='/boards')
 @bp.route('/<int:board_id>/cards/<int:card_id>/comments', methods=['POST'])
 @jwt_required()
 def create(board_id, card_id):
-    card = sqla.session.execute(
-        select(Card).
-        where(Card.board_id == board_id, Card.id == card_id)
-    ).scalar_one_or_none()
-
-    if not card:
-        abort(404)
-
+    get_card(board_id, card_id)
     username = get_jwt_identity()
 
     if not (
