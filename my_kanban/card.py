@@ -1,8 +1,7 @@
-from typing import Any
-
-from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+from flask import (Blueprint, abort, flash, redirect, render_template, request,
+                   url_for)
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from sqlalchemy import Row, select
+from sqlalchemy import select
 
 from my_kanban import sqla
 
@@ -23,8 +22,8 @@ def get_card(board_id: int, card_id: int) -> Card:
     return card
 
 
-def delete_card(card: Card, board_info: Row[Any]) -> None:
-    if not board_info.is_owner:
+def delete_card(card: Card, user_is_owner: int) -> None:
+    if not user_is_owner:
         abort(403)
     sqla.session.delete(card)
     sqla.session.commit()
@@ -46,8 +45,8 @@ def move_card(card: Card, card_status: str, operation: str) -> None:
     sqla.session.commit()
 
 
-def edit_card(card: Card, title: str, content: str, board_info: Row[Any]) -> None:
-    if not board_info.is_owner:
+def edit_card(card: Card, title: str, content: str, user_is_owner: int) -> None:
+    if not user_is_owner:
         abort(403)
 
     if not title:
@@ -107,7 +106,7 @@ def handle(board_id, card_id):
             move_card(card, request.form['card_status'], operation)
             return redirect(url_for("board.handle", board_id=board_id), 303)
         elif operation == 'EDIT':
-            edit_card(card, request.form['title'], request.form['content'], board_info)
+            edit_card(card, request.form['title'], request.form['content'], user_info.is_owner)
         else:
             abort(400)
 
@@ -115,5 +114,5 @@ def handle(board_id, card_id):
         'card/view.html',
         card=card,
         board_id=board_id,
-        board_info=board_info
+        user_info=user_info
     )
