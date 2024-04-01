@@ -1,3 +1,6 @@
+from collections import defaultdict
+from typing import Any
+
 from flask import Blueprint, abort, redirect, render_template, request, url_for
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy import select
@@ -19,6 +22,13 @@ def get_board(board_id: int) -> Board:
     ).unique().scalar_one()
 
 
+def get_card_groups(cards: list) -> defaultdict[Any, list]:
+    grouped_cards = defaultdict(list)
+    for card in cards:
+        grouped_cards[card.status].append(card)
+    return grouped_cards
+
+
 @bp.route('/boards/<int:board_id>', methods=['GET', 'POST'])
 @jwt_required()
 def handle(board_id):
@@ -37,10 +47,13 @@ def handle(board_id):
         else:
             abort(403)
 
+    board = get_board(board_id)
+
     return render_template(
         'board.html',
-        board=get_board(),
-        username=username,
+        board=board,
+        grouped_cards=get_card_groups(board.cards),
+        username=username
     )
 
 
