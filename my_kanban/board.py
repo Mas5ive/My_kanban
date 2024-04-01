@@ -53,7 +53,7 @@ def handle(board_id):
         'board.html',
         board=board,
         grouped_cards=get_card_groups(board.cards),
-        username=username
+        user_board_info=user_board_info
     )
 
 
