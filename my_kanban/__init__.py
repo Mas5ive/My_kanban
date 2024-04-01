@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask
+from flask import Flask, render_template
 from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
 
@@ -44,5 +44,9 @@ def create_app(test_config=None):
     app.register_blueprint(membership.bp)
     app.register_blueprint(card.bp)
     app.register_blueprint(comment.bp)
+
+    @app.route('/')
+    def index():
+        return render_template('index.html')
 
     return app
