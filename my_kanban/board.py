@@ -6,10 +6,17 @@ from sqlalchemy.orm import joinedload, selectinload
 from my_kanban import sqla
 
 from .data.models import Board, user_board
-
 from .utils import get_board_info
 
 bp = Blueprint('board', __name__)
+
+
+def get_board(board_id: int) -> Board:
+    return sqla.session.execute(
+        select(Board).
+        options(joinedload(Board.users), selectinload(Board.cards)).
+        where(Board.id == board_id)
+    ).unique().scalar_one()
 
 
 @bp.route('/boards/<int:board_id>', methods=['GET', 'POST'])
@@ -22,16 +29,9 @@ def handle(board_id):
     if user_board_info is None:
         abort(403)
 
-    def get_board():
-        return sqla.session.execute(
-            select(Board).
-            options(joinedload(Board.users), selectinload(Board.cards)).
-            where(Board.id == board_id)
-        ).unique().scalar_one()
-
     if request.method == 'POST':
         if user_board_info.is_owner and request.form.get('_method') == 'DELETE':
-            sqla.session.delete(get_board())
+            sqla.session.delete(get_board(board_id))
             sqla.session.commit()
             return redirect(url_for("profile.show"), 303)
         else:
