@@ -1,0 +1,124 @@
+{% extends 'card/base.html' %}
+
+{% block title %}
+<title>{{ card.title }}</title>
+{% endblock %}
+
+{% block style %}
+<style>
+    h2 {
+        text-align: center;
+        position: sticky;
+        margin: 0;
+        padding: 5px;
+        background-color: #864f1b;
+    }
+
+    .comments {
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        width: 25%;
+        height: 80vh;
+        padding: 10px;
+        border: 3px solid #ccc;
+    }
+
+    .comment {
+        margin-bottom: 10px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+    }
+
+    .comment>p:nth-child(1) {
+        text-align: center;
+    }
+
+    .comment>p:nth-child(2) {
+        margin-right: 10px;
+    }
+
+    .delete-comment-botton {
+        float: right;
+        margin-top: 5px;
+        margin-bottom: 5px;
+        margin-right: 10px;
+    }
+
+    .comment-input {
+        width: 95%;
+        height: 100px;
+        resize: vertical;
+        margin-bottom: 10px;
+    }
+
+    .submit-button {
+        float: right;
+        width: 80px;
+        margin-right: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block header_title %}
+<h1>{{ card.board.title }}</h1>
+{% endblock %}
+
+{% block content %}
+<main>
+    <form action="{{ url_for('board.handle', board_id=board_id) }}" method="get">
+        <button class="board-button">Back to the board</button>
+    </form>
+
+    <section class="card-info">
+        {% if user_info.is_owner %}
+        <form action="{{ url_for('card.handle', board_id=board_id, card_id=card.id) }}" method="post">
+            <textarea class="card-title" name="title" placeholder="Enter title" required>{{ card.title }}</textarea>
+            <textarea class="card-content" name="content" placeholder="Enter content">{{ card.content }}</textarea>
+            <input type="hidden" name="operation" value="EDIT">
+            <button class="board-button">Edit</button>
+        </form>
+        {% else %}
+        <h3>{{ card.title }}</h3>
+        <p>{{ card.content }}</p>
+        {% endif %}
+
+        {% for message in get_flashed_messages() %}
+        <div class="flash">{{ message }}</div>
+        {% endfor %}
+    </section>
+
+    {% if user_info.is_owner %}
+    <form action="{{ url_for('card.handle', board_id=board_id, card_id=card.id) }}" method="post">
+        <input type="hidden" name="operation" value="DELETE">
+        <button class="board-button">Delete</button>
+    </form>
+    {% endif %}
+
+    <section class="comments">
+        <h2>Comments</h2>
+        <div class="scrollable">
+            {% for comment in card.comments %}
+            <div class="comment">
+                <p>{{ comment.author }} ({{comment.date.strftime('%Y-%m-%d %H:%M') }})</p>
+                <p>{{ comment.content|replace("\n", "<br>")|safe }}</p>
+                {% if comment.author == user_info.username %}
+                <form
+                    action="{{ url_for('comment.delete', board_id=board_id, card_id=card.id, comment_id=comment.id) }}"
+                    method="post">
+                    <input type="hidden" name="_method" value="DELETE">
+                    <button class="delete-comment-botton">Delete</button>
+                    <div style="clear: both;"></div>
+                </form>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <form action="{{ url_for('comment.create', board_id=board_id, card_id=card.id) }}" method="post">
+                <textarea class="comment-input" name="content" placeholder="Enter a comment"></textarea>
+                <button class="submit-button">Send</button>
+            </form>
+        </div>
+    </section>
+</main>
+{% endblock %}
