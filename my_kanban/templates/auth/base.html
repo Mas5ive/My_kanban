@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Macondo+Swash+Caps&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    {% block title %}{% endblock %}
+    <style>
+        
+        main {
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .form-button {
+            display: block;
+            padding: 5px 10px;
+            margin: auto;
+            margin-top: 40px;
+            border-radius: 5px;
+            color: white;
+            background-color: transparent;
+            border: 1px solid white;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>KANBAN</h1>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer></footer>
+</body>

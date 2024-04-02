@@ -1,0 +1,22 @@
+{% extends 'auth/base.html' %}
+
+{% block title %}
+<title>Sign up</title>
+{% endblock %}
+
+{% block content %}
+<h1>Create your account</h1>
+<form action="{{ url_for('auth.register') }}" method="post">
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required>
+    <br>
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required>
+
+    {% for message in get_flashed_messages() %}
+    <div class="flash">{{ message }}</div>
+    {% endfor %}
+
+    <button class="form-button">Sign up</button>
+</form>
+{% endblock %}
