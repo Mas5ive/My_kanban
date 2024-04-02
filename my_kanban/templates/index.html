@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Macondo+Swash+Caps&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 2%;
+        }
+
+        main>img {
+            width: 500px;
+            height: 437px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <form action="{{ url_for('auth.register') }}" method="get">
+            <button class="transparent-button">Sign Up</button>
+        </form>
+
+        <h1>KANBAN</h1>
+
+        <form action="{{ url_for('auth.login') }}" method="get">
+            <button class="transparent-button">Log in</button>
+        </form>
+    </header>
+
+    <main>
+        <img src="{{ url_for('static', filename='ninja.png') }}" alt="ninja programmer">
+        <h2>A totally innovative service that allows you to organise your problem solving process.</h2>
+        <p>Invite people to projects, organise discussions and solve problems together!</p>
+    </main>
+
+    <footer></footer>
+
+</body>
+
+</html>
