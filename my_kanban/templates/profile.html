@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Macondo+Swash+Caps&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <title>User Boards</title>
+    <style>
+        main {
+            flex-direction: column;
+            padding-left: 20px;
+            padding-bottom: 20px;
+        }
+
+        .board-button {
+            padding: 10px 10px;
+            border-radius: 5px;
+            color: white;
+            font-size: 18px;
+            background-color: #251a0d;
+            border: none;
+        }
+
+        .line-block {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <form action="{{ url_for('auth.logout') }}" method="get">
+            <button class="transparent-button">Log out</button>
+        </form>
+        <h1>{{ username }}</h1>
+    </header>
+
+    <main>
+        {% if owner_boards %}
+        <section>
+            <h2>Your boards</h2>
+            <div class="line-block">
+                {% for board in owner_boards %}
+                <form action="{{ url_for('board.handle', board_id=board.id) }}" method="get">
+                    <button class="board-button">{{ board.title }}</button>
+                </form>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <section>
+            <h3>Create a new board</h3>
+            <form action="{{ url_for('board.create') }}" method="post">
+                <div class="line-block">
+                    <label for="title">Title:</label>
+                    <input type="text" id="title" name="title" required>
+                    <button class="transparent-button">Create</button>
+                </div>
+            </form>
+        </section>
+
+        {% if invitations %}
+        <section>
+            <h2>Invitations</h2>
+            {% for invitation, board_title in invitations %}
+            <div class="line-block">
+                {{ invitation.user_sender }} invites you to "{{ board_title }}"
+                <form action="{{ url_for('membership.pick_invitation') }}" method="post">
+                    <input type="hidden" name="board" value="{{ invitation.board_id }}">
+                    <input type="hidden" name="operation" value="reject">
+                    <button class="transparent-button" type="submit">Reject</button>
+                </form>
+                <form action="{{ url_for('membership.pick_invitation') }}" method="post">
+                    <input type="hidden" name="board" value="{{ invitation.board_id }}">
+                    <input type="hidden" name="operation" value="accept">
+                    <button class="transparent-button" type="submit">Accept</button>
+                </form>
+            </div>
+            {% endfor %}
+        </section>
+        {% endif %}
+
+
+        {% if invitation_boards %}
+        <section>
+            <h2>You're a member of</h2>
+            <div class="line-block">
+                {% for board in invitation_boards %}
+                <form action="{{ url_for('board.handle', board_id=board.id) }}" method="get">
+                    <button class="board-button">{{ board.title }}</button>
+                </form>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+    </main>
+
+    <footer></footer>
+
+</body>
+
+</html>
