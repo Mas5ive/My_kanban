@@ -18,15 +18,15 @@ def delete_card(card: Card, user_is_owner: int) -> None:
     sqla.session.commit()
 
 
-def move_card(card: Card, card_status: str, operation: str) -> None:
-    match card_status, operation:
-        case '0', 'MOVE_RIGHT':
+def move_card(card: Card, operation: str) -> None:
+    match card.status, operation:
+        case 0, 'MOVE_RIGHT':
             card.status = 1
-        case '1', 'MOVE_LEFT':
+        case 1, 'MOVE_LEFT':
             card.status = 0
-        case '1', 'MOVE_RIGHT':
+        case 1, 'MOVE_RIGHT':
             card.status = 2
-        case '2', 'MOVE_LEFT':
+        case 2, 'MOVE_LEFT':
             card.status = 1
         case _:
             abort(400)
@@ -92,7 +92,7 @@ def handle(board_id, card_id):
             delete_card(card, user_info.is_owner)
             return redirect(url_for("board.handle", board_id=board_id), 303)
         elif 'MOVE' in operation:
-            move_card(card, request.form['card_status'], operation)
+            move_card(card, operation)
             return redirect(url_for("board.handle", board_id=board_id), 303)
         elif operation == 'EDIT':
             edit_card(card, request.form['title'], request.form['content'], user_info.is_owner)

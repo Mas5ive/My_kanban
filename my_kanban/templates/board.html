@@ -141,7 +141,6 @@
                         </form>
                         <form action="{{ url_for('card.handle', board_id=board.id, card_id=card.id) }}" method="post"
                             class="flex-20">
-                            <input type="hidden" name="card_status" value="{{ card.status }}">
                             <input type="hidden" name="operation" value="MOVE_RIGHT">
                             <button class="move-card-button">=&gt;</button>
                         </form>
@@ -159,7 +158,6 @@
                     <div class="card">
                         <form action="{{ url_for('card.handle', board_id=board.id, card_id=card.id) }}" method="post"
                             class="flex-20">
-                            <input type="hidden" name="card_status" value="{{ card.status }}">
                             <input type="hidden" name="operation" value="MOVE_LEFT">
                             <button class="move-card-button">&#60;=</button>
                         </form>
@@ -169,7 +167,6 @@
                         </form>
                         <form action="{{ url_for('card.handle', board_id=board.id, card_id=card.id) }}" method="post"
                             class="flex-20">
-                            <input type="hidden" name="card_status" value="{{ card.status }}">
                             <input type="hidden" name="operation" value="MOVE_RIGHT">
                             <button class="move-card-button">=&gt;</button>
                         </form>
@@ -187,7 +184,6 @@
                     <div class="card">
                         <form action="{{ url_for('card.handle', board_id=board.id, card_id=card.id) }}" method="post"
                             class="flex-20">
-                            <input type="hidden" name="card_status" value="{{ card.status }}">
                             <input type="hidden" name="operation" value="MOVE_LEFT">
                             <button class="move-card-button">&#60;=</button>
                         </form>
