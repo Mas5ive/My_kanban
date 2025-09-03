@@ -1,56 +1,13 @@
 BEGIN TRANSACTION;
-DROP TABLE IF EXISTS "board";
-CREATE TABLE "board" (
-	"id"	INTEGER,
-	"title"	TEXT NOT NULL,
-	PRIMARY KEY("id" AUTOINCREMENT)
-);
-DROP TABLE IF EXISTS "user";
-CREATE TABLE  "user" (
-	"name"	    TEXT,
-	"psw_hash"	TEXT NOT NULL,
-	PRIMARY KEY("name")
-);
-DROP TABLE IF EXISTS "comment";
-CREATE TABLE "comment" (
-	"id"	    INTEGER,
-	"author"	TEXT    NOT NULL,
-	"card_id"	INTEGER NOT NULL,
-	"content"	TEXT    NOT NULL,
-	"date"	    TEXT    NOT NULL,
-	FOREIGN KEY("card_id") REFERENCES "card"("id")   ON DELETE CASCADE,
-	FOREIGN KEY("author")  REFERENCES "user"("name") ON DELETE CASCADE,
-	PRIMARY KEY("id" AUTOINCREMENT)
-);
-DROP TABLE IF EXISTS "invitation";
-CREATE TABLE "invitation" (
-	"user_recipient" TEXT,
-	"board_id"	     INTEGER,
-	"user_sender"	 TEXT         NOT NULL CHECK("user_sender" <> "user_recipient"),
-	FOREIGN KEY("board_id")       REFERENCES "board"("id")  ON DELETE CASCADE,
-	FOREIGN KEY("user_sender")    REFERENCES "user"("name") ON DELETE CASCADE,
-	FOREIGN KEY("user_recipient") REFERENCES "user"("name") ON DELETE CASCADE,
-	PRIMARY KEY("user_recipient","board_id")
-);
-DROP TABLE IF EXISTS "user_board";
-CREATE TABLE "user_board" (
-	"username"	TEXT      NOT NULL,
-	"board_id"	INTEGER   NOT NULL,
-	"is_owner"	INTEGER   DEFAULT 0,
-	FOREIGN KEY("board_id") REFERENCES "board"("id")  ON DELETE CASCADE,
-	FOREIGN KEY("username") REFERENCES "user"("name") ON DELETE CASCADE,
-	PRIMARY KEY("username","board_id")
-);
-DROP TABLE IF EXISTS "card";
-CREATE TABLE "card" (
-	"id"	    INTEGER,
-	"board_id"	INTEGER NOT NULL,
-	"title"	    TEXT    NOT NULL,
-	"content"	TEXT,
-	"status"	INTEGER DEFAULT 0,
-	FOREIGN KEY("board_id") REFERENCES "board"("id") ON DELETE CASCADE,
-	PRIMARY KEY("id" AUTOINCREMENT)
-);
+
+DELETE FROM "comment";
+DELETE FROM "invitation";
+DELETE FROM "user_board";
+DELETE FROM "card";
+DELETE FROM "user";
+DELETE FROM "board";
+
+
 INSERT INTO "board" VALUES (1,'Amazing project');
 INSERT INTO "board" VALUES (2,'Boring project');
 INSERT INTO "board" VALUES (3,'My project');
@@ -72,4 +29,5 @@ INSERT INTO "comment" VALUES (3,'user2',2,'I know an excellent furniture store. 
 INSERT INTO "comment" VALUES (4,'demo_user',2,'It will be four floors, so everything is fine. It should fit. Let me know how you choose the right options.','2024-01-30 14:15:00');
 INSERT INTO "invitation" VALUES ('demo_user',1,'user1');
 INSERT INTO "invitation" VALUES ('demo_user',2,'user2');
+
 COMMIT;
