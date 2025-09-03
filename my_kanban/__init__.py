@@ -1,11 +1,13 @@
 import os
 
 from flask import Flask, render_template
+from flask_alembic import Alembic
 from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
 
 sqla = SQLAlchemy()
 jwt = JWTManager()
+alembic = Alembic()
 
 
 def create_app(test_config=None):
@@ -33,6 +35,7 @@ def create_app(test_config=None):
 
     sqla.init_app(app)
     jwt.init_app(app)
+    alembic.init_app(app)
 
     from .data.db import init_app
     init_app(app)
