@@ -3,8 +3,8 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy import select
 
 from my_kanban import sqla
+from my_kanban.models import Comment, user_board
 
-from .data.models import Comment, user_board
 from .utils import get_card
 
 bp = Blueprint('comment', __name__, url_prefix='/boards')

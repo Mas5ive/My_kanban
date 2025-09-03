@@ -7,8 +7,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import joinedload, selectinload
 
 from my_kanban import sqla
+from my_kanban.models import Board, user_board
 
-from .data.models import Board, user_board
 from .utils import get_board_info
 
 bp = Blueprint('board', __name__)

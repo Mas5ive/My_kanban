@@ -5,8 +5,7 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy import select
 
 from my_kanban import sqla
-
-from .data.models import Board, Invitation, user_board
+from my_kanban.models import Board, Invitation, user_board
 
 bp = Blueprint('profile', __name__)
 

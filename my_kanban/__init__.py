@@ -43,7 +43,7 @@ def create_app(test_config=None):
     jwt.init_app(app)
     alembic.init_app(app)
 
-    from . import auth, board, card, comment, membership, profile
+    from .routes import auth, board, card, comment, membership, profile
     app.register_blueprint(auth.bp)
     app.register_blueprint(profile.bp)
     app.register_blueprint(board.bp)

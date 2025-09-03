@@ -3,7 +3,7 @@ from sqlalchemy import select
 
 from my_kanban import sqla
 
-from .data.models import Card, user_board
+from my_kanban.models import Card, user_board
 
 
 def get_board_info(board_id: int):

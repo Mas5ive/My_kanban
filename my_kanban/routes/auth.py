@@ -5,8 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from my_kanban import sqla
-
-from .data.models import User
+from my_kanban.models import User
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 

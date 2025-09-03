@@ -4,8 +4,8 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from my_kanban import sqla
+from my_kanban.models import Invitation, User, user_board
 
-from .data.models import Invitation, User, user_board
 from .utils import get_board_info
 
 bp = Blueprint('membership', __name__)
