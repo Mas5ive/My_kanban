@@ -10,7 +10,7 @@ user_board = Table(
     sqla.metadata,
     Column('username', ForeignKey('user.name', ondelete='CASCADE'), primary_key=True),
     Column('board_id', ForeignKey('board.id', ondelete='CASCADE'), primary_key=True),
-    Column('is_owner', default=0)
+    Column(name='is_owner', type_=Integer, default=0, nullable=False),
 )
 
 
