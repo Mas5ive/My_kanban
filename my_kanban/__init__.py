@@ -1,8 +1,10 @@
 import os
+from datetime import datetime, timedelta, timezone
 
-from flask import Flask, render_template
+from flask import Flask, flash, redirect, render_template, url_for
 from flask_alembic import Alembic
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import (JWTManager, create_access_token, get_jwt,
+                                get_jwt_identity, set_access_cookies)
 from flask_sqlalchemy import SQLAlchemy
 
 sqla = SQLAlchemy()
@@ -19,8 +21,29 @@ def create_app(test_config=None):
         JWT_TOKEN_LOCATION=['cookies'],
         JWT_COOKIE_SECURE=False,
         JWT_COOKIE_CSRF_PROTECT=False,
+        JWT_ACCESS_TOKEN_EXPIRES=timedelta(weeks=1),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
     )
+
+    @jwt.expired_token_loader
+    def expired_token_callback(jwt_header, jwt_payload):
+        flash('Your session has expired. Please log in again.', 'warning')
+        return redirect(url_for('auth.login'))
+
+    @app.after_request
+    def refresh_expiring_jwts(response):
+        """Mechanism for implementing a sliding session"""
+        try:
+            exp_timestamp = get_jwt()["exp"]
+            now = datetime.now(timezone.utc)
+            exp_datetime = datetime.fromtimestamp(exp_timestamp, tz=timezone.utc)
+
+            if exp_datetime - now < timedelta(days=1):
+                access_token = create_access_token(identity=get_jwt_identity())
+                set_access_cookies(response, access_token)
+        except (RuntimeError, KeyError):
+            pass  # This occurs on endpoints without JWT, which is normal behavior
+        return response
 
     if config_name == 'development':
         app.config.from_mapping(
