@@ -47,13 +47,9 @@ poetry install
 pip install -r requirements.txt
 ```
 
-## Turn on the demo (optional)
+## Demo mode
 
-```bash
-flask --app my_kanban init-db
-```
-
-This command will create a database file that contains a schema and some content that allows you to evaluate all the functions of the application.
+To run the demo, use the **VS Code launcher**. When the application starts, it will already have data loaded that will help you quickly evaluate all of its features.
 
 In this example, 3 users are created:
 
@@ -65,12 +61,12 @@ In this example, 3 users are created:
 
 Use them to get a peek behind the scenes!
 
-## Run
+## Development
 
-If you haven't skipped the demo step, create your own database file. Take the already existing code in the data folder as a basis.
-
-Now everything is ready to run!
+Before launching the app in this mode for the first time, you must initialise the DB based on the latest migration:
 
 ```bash
-flask --app my_kanban run
+export FLASK_CONFIG=development && flask --app my_kanban db upgrade
 ```
+
+Run the app using the **VS code launcher**.
