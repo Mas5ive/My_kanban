@@ -1,11 +1,7 @@
 from flask import Blueprint, abort, flash, redirect, request, url_for
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from sqlalchemy import select
 
-from my_kanban import sqla
-from my_kanban.models import Comment, user_board
-
-from .utils import get_card
+from my_kanban import crud
 
 bp = Blueprint('comment', __name__, url_prefix='/boards')
 
@@ -13,23 +9,18 @@ bp = Blueprint('comment', __name__, url_prefix='/boards')
 @bp.route('/<int:board_id>/cards/<int:card_id>/comments', methods=['POST'])
 @jwt_required()
 def create(board_id, card_id):
-    get_card(board_id, card_id)
+    if not crud.get_card(board_id, card_id):
+        abort(404)
+
     username = get_jwt_identity()
 
-    if not (
-        sqla.session.query(
-            select(user_board).
-            where(user_board.c.board_id == board_id, user_board.c.username == username).
-            exists()
-        ).scalar()
-    ):
+    if not crud.get_user_link_to_board(board_id, username):
         abort(403)
 
     content = request.form['content']
+
     if content:
-        new_comment = Comment(card_id=card_id, author=username, content=content)
-        sqla.session.add(new_comment)
-        sqla.session.commit()
+        crud.create_comment(card_id, username, content)
     else:
         flash('Сomment text is required')
 
@@ -39,21 +30,18 @@ def create(board_id, card_id):
 @bp.route('/<int:board_id>/cards/<int:card_id>/comments/<int:comment_id>', methods=['POST'])
 @jwt_required()
 def delete(board_id, card_id, comment_id):
-    comment = sqla.session.execute(
-        select(Comment).
-        where(Comment.id == comment_id)
-    ).scalar_one_or_none()
+    comment = crud.get_comment(comment_id)
 
     if not comment or comment.card.id != card_id or comment.card.board_id != board_id:
         abort(404)
 
     username = get_jwt_identity()
+
     if username != comment.author:
         abort(403)
 
     if request.form['_method'] == 'DELETE':
-        sqla.session.delete(comment)
-        sqla.session.commit()
+        crud.delete_comment(comment)
     else:
         abort(400)
 

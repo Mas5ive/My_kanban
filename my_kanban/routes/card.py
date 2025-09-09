@@ -1,60 +1,23 @@
 from flask import (Blueprint, abort, flash, redirect, render_template, request,
                    url_for)
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from sqlalchemy import select
 
-from my_kanban import sqla
-from my_kanban.models import Card, user_board
-
-from .utils import get_board_info, get_card
+from my_kanban import crud
 
 bp = Blueprint('card', __name__, url_prefix='/boards')
-
-
-def delete_card(card: Card, user_is_owner: int) -> None:
-    if not user_is_owner:
-        abort(403)
-    sqla.session.delete(card)
-    sqla.session.commit()
-
-
-def move_card(card: Card, operation: str) -> None:
-    match card.status, operation:
-        case 0, 'MOVE_RIGHT':
-            card.status = 1
-        case 1, 'MOVE_LEFT':
-            card.status = 0
-        case 1, 'MOVE_RIGHT':
-            card.status = 2
-        case 2, 'MOVE_LEFT':
-            card.status = 1
-        case _:
-            abort(400)
-
-    sqla.session.commit()
-
-
-def edit_card(card: Card, title: str, content: str, user_is_owner: int) -> None:
-    if not user_is_owner:
-        abort(403)
-
-    if not title:
-        flash('Title is required')
-    else:
-        card.title = title
-
-    card.content = content
-    sqla.session.commit()
-    flash('Saved')
 
 
 @bp.route('/<int:board_id>/cards', methods=['GET', 'POST'])
 @jwt_required()
 def create(board_id):
-    board_info = get_board_info(board_id)
+    board_links_to_users = crud.get_board_links_to_users(board_id)
+
+    if not board_links_to_users:
+        abort(400)
+
     username = get_jwt_identity()
 
-    if not any(info.is_owner for info in board_info if info.username == username):
+    if not any(link.is_owner for link in board_links_to_users if link.username == username):
         abort(403)
 
     if request.method == 'POST':
@@ -62,9 +25,7 @@ def create(board_id):
         content = request.form['content']
 
         if title:
-            new_card = Card(board_id=board_id, title=title, content=content)
-            sqla.session.add(new_card)
-            sqla.session.commit()
+            crud.create_card(board_id, title, content)
             return redirect(url_for("board.handle", board_id=board_id), 303)
         else:
             flash('Title is required')
@@ -75,27 +36,48 @@ def create(board_id):
 @bp.route('/<int:board_id>/cards/<int:card_id>', methods=['GET', 'POST'])
 @jwt_required()
 def handle(board_id, card_id):
-    card = get_card(board_id, card_id)
+    card = crud.get_card(board_id, card_id)
+
+    if not card:
+        abort(404)
+
     username = get_jwt_identity()
+    user_link_to_board = crud.get_user_link_to_board(board_id, username)
 
-    user_info = sqla.session.execute(
-        select(user_board).
-        where(user_board.c.board_id == board_id, user_board.c.username == username)
-    ).one_or_none()
-
-    if not user_info:
+    if not user_link_to_board:
         abort(403)
 
     if request.method == 'POST':
         operation = request.form['operation']
+
         if operation == 'DELETE':
-            delete_card(card, user_info.is_owner)
+
+            if user_link_to_board.is_owner:
+                crud.delete_card(card)
+                return redirect(url_for("board.handle", board_id=board_id), 303)
+            else:
+                abort(403)
+
+        elif operation in ('MOVE_LEFT', 'MOVE_RIGHT'):
+            try:
+                crud.move_card(card, operation)
+            except ValueError:
+                abort(400)
             return redirect(url_for("board.handle", board_id=board_id), 303)
-        elif 'MOVE' in operation:
-            move_card(card, operation)
-            return redirect(url_for("board.handle", board_id=board_id), 303)
+
         elif operation == 'EDIT':
-            edit_card(card, request.form['title'], request.form['content'], user_info.is_owner)
+            if not user_link_to_board.is_owner:
+                abort(403)
+
+            title = request.form['title']
+            content = request.form['content']
+
+            if not title:
+                crud.edit_card(card, content=content)
+                flash('Saved, but the title can not be empty')
+            else:
+                crud.edit_card(card, title=title, content=content)
+                flash('Saved')
         else:
             abort(400)
 
@@ -103,5 +85,5 @@ def handle(board_id, card_id):
         'card/view.html',
         card=card,
         board_id=board_id,
-        user_info=user_info
+        user_info=user_link_to_board
     )

@@ -2,10 +2,8 @@ from collections import defaultdict
 
 from flask import Blueprint, render_template
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from sqlalchemy import select
 
-from my_kanban import sqla
-from my_kanban.models import Board, Invitation, user_board
+from my_kanban import crud
 
 bp = Blueprint('profile', __name__)
 
@@ -15,11 +13,7 @@ bp = Blueprint('profile', __name__)
 def show():
     username = get_jwt_identity()
 
-    boards_info = sqla.session.execute(
-        select(Board, user_board.c.is_owner).
-        join(user_board, user_board.c.board_id == Board.id).
-        where(user_board.c.username == username)
-    ).all()
+    boards_info = crud.get_user_boards(username)
 
     boards = defaultdict(list)
     for board, is_owner in boards_info:
@@ -28,11 +22,7 @@ def show():
         else:
             boards['invitation boards'].append(board)
 
-    invitations = sqla.session.execute(
-        select(Invitation, Board.title).
-        join(Board, Invitation.board_id == Board.id).
-        where(Invitation.user_recipient == username)
-    ).all()
+    invitations = crud.get_recipient_invitations(username)
 
     return render_template(
         'profile.html',

@@ -2,10 +2,9 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_jwt_extended import (create_access_token, set_access_cookies,
                                 unset_jwt_cookies)
 from sqlalchemy.exc import IntegrityError
-from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.security import check_password_hash
 
-from my_kanban import sqla
-from my_kanban.models import User
+from my_kanban import crud
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -30,14 +29,8 @@ def register():
             error = 'Password is required.'
 
         if error is None:
-            user = User(
-                name=username,
-                psw_hash=generate_password_hash(password)
-            )
-
             try:
-                sqla.session.add(user)
-                sqla.session.commit()
+                crud.create_user(username, password)
             except IntegrityError:
                 error = f'User {username} is already registered.'
             else:
@@ -55,7 +48,7 @@ def login():
         password = request.form['password']
         error = None
 
-        user = sqla.session.query(User).filter(User.name == username).first()
+        user = crud.get_user_by_name(username)
 
         if user is None:
             error = 'Incorrect username.'

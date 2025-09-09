@@ -1,12 +1,8 @@
 from flask import Blueprint, abort, flash, redirect, request, url_for
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
-from my_kanban import sqla
-from my_kanban.models import Invitation, User, user_board
-
-from .utils import get_board_info
+from my_kanban import crud
 
 bp = Blueprint('membership', __name__)
 
@@ -14,30 +10,26 @@ bp = Blueprint('membership', __name__)
 @bp.route('/boards/<int:board_id>/invitations', methods=['POST'])
 @jwt_required()
 def сreate_invitation(board_id):
-    board_info = get_board_info(board_id)
+    board_links_to_users = crud.get_board_links_to_users(board_id)
+
+    if not board_links_to_users:
+        abort(400)
+
     sender = get_jwt_identity()
 
-    if not any(info.is_owner for info in board_info if info.username == sender):
+    if not any(link.is_owner for link in board_links_to_users if link.username == sender):
         abort(403)
 
     recipient = request.form['recipient']
+
     if not (
-        sqla.session.query(
-            select(User).
-            where(User.name == recipient).exists()
-        ).scalar()
-        and all(info.username != recipient for info in board_info)
+        crud.get_user_by_name(recipient)
+        and all(link.username != recipient for link in board_links_to_users)
     ):
         abort(400)
 
-    invitation = Invitation(
-        user_recipient=recipient,
-        board_id=board_id,
-        user_sender=sender
-    )
     try:
-        sqla.session.add(invitation)
-        sqla.session.commit()
+        crud.create_invitation(board_id, recipient, sender)
     except IntegrityError:
         return f'{recipient} has already received an invitation', 409
 
@@ -48,29 +40,28 @@ def сreate_invitation(board_id):
 @bp.route('/boards/<int:board_id>/users', methods=['POST'])
 @jwt_required()
 def delete_member(board_id):
+    board_links_to_users = crud.get_board_links_to_users(board_id)
+
+    if not board_links_to_users:
+        abort(400)
+
     if not request.form.get('_method') == 'DELETE':
         abort(405)
 
-    board_info = get_board_info(board_id)
     username = get_jwt_identity()
 
-    if not any(info.is_owner for info in board_info if info.username == username):
+    if not any(link.is_owner for link in board_links_to_users if link.username == username):
         abort(403)
 
     other_user = request.form['user']
 
     if (
-        all(info.username != other_user for info in board_info)
+        all(link.username != other_user for link in board_links_to_users)
         or other_user == username
     ):
         abort(400)
 
-    sqla.session.execute(
-        user_board.delete().
-        where(user_board.c.username == other_user, user_board.c.board_id == board_id)
-    )
-    sqla.session.commit()
-
+    crud.delete_member(board_id, other_user)
     return redirect(url_for("board.handle", board_id=board_id), 303)
 
 
@@ -79,26 +70,18 @@ def delete_member(board_id):
 def pick_invitation():
     username = get_jwt_identity()
     board_id = request.form['board']
-
-    invitation = sqla.session.execute(
-        select(Invitation).
-        where(Invitation.board_id == board_id, Invitation.user_recipient == username)
-    ).scalar_one_or_none()
+    invitation = crud.get_invitation_by_recipient(board_id, username)
 
     if not invitation:
         abort(400)
 
     operation = request.form['operation']
+
     if operation == 'accept':
-        with sqla.session.begin_nested():
-            sqla.session.delete(invitation)
-            sqla.session.execute(
-                user_board.insert().values(username=username, board_id=board_id)
-            )
+        crud.create_member(invitation)
     elif operation == 'reject':
-        sqla.session.delete(invitation)
+        crud.delete_invitation(invitation)
     else:
         abort(400)
 
-    sqla.session.commit()
     return redirect(url_for("profile.show"), 303)
