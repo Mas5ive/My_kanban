@@ -1,19 +1,9 @@
-from collections import defaultdict
-from typing import Any
-
 from flask import Blueprint, abort, redirect, render_template, request, url_for
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
-from my_kanban import crud
+from my_kanban import crud, utils
 
 bp = Blueprint('board', __name__)
-
-
-def get_card_groups(cards: list) -> defaultdict[Any, list]:
-    grouped_cards = defaultdict(list)
-    for card in cards:
-        grouped_cards[card.status].append(card)
-    return grouped_cards
 
 
 @bp.route('/boards/<int:board_id>', methods=['GET', 'POST'])
@@ -41,7 +31,7 @@ def handle(board_id):
     return render_template(
         'board.html',
         board=board,
-        grouped_cards=get_card_groups(board.cards),
+        grouped_cards=utils.get_card_groups(board.cards),
         user_board_info=user_board_info
     )
 
