@@ -4,9 +4,6 @@ body {
     flex-direction: column;
     height: 100%;
     margin: 0;
-}
-
-body {
     justify-content: space-between;
     overflow-wrap: break-word;
     font-family: "Macondo Swash Caps", cursive;
