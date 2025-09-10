@@ -118,7 +118,7 @@
                     <form action="{{ url_for('membership.delete_member', board_id=board.id) }}" method="post">
                         <input type="hidden" name="user" value="{{ user.name }}">
                         <input type="hidden" name="_method" value="DELETE">
-                        <button class="delete-member-botton">Delete</button>
+                        <button class="delete-member-button">Delete</button>
                     </form>
                     {% endif %}
                 </div>

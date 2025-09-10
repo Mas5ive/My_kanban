@@ -55,7 +55,7 @@
                     action="{{ url_for('comment.delete', board_id=board_id, card_id=card.id, comment_id=comment.id) }}"
                     method="post">
                     <input type="hidden" name="_method" value="DELETE">
-                    <button class="delete-comment-botton">Delete</button>
+                    <button class="delete-comment-button">Delete</button>
                     <div style="clear: both;"></div>
                 </form>
                 {% endif %}
