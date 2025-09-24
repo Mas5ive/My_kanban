@@ -29,16 +29,14 @@
 
                 <div class="scrollable">
                     {% for card in backlog_cards %}
-                    <div class="card">
-                        <form action="{{ url_for('card.handle', board_id=board.id, card_id=card.id) }}" method="get"
+                    <div class="card" data-card-id="{{ card.id }}">
+                        <form action="{{ url_for('card.show', board_id=board.id, card_id=card.id) }}" method="get"
                             class="flex-grow-rest">
                             <button class="open-card-button">{{ card.title|replace("\n", "<br>")|safe }}</button>
                         </form>
-                        <form action="{{ url_for('card.handle', board_id=board.id, card_id=card.id) }}" method="post"
-                            class="flex-20">
-                            <input type="hidden" name="operation" value="MOVE_RIGHT">
-                            <button class="move-card-button">=&gt;</button>
-                        </form>
+                        <button class="move-card-button flex-20" data-operation="MOVE_RIGHT"
+                            data-board-id="{{ board.id }}" data-card-id="{{ card.id }}">=&gt;
+                        </button>
                     </div>
                     {% endfor %}
                 </div>
@@ -50,21 +48,17 @@
 
                 <div class="scrollable">
                     {% for card in in_progress_cards %}
-                    <div class="card">
-                        <form action="{{ url_for('card.handle', board_id=board.id, card_id=card.id) }}" method="post"
-                            class="flex-20">
-                            <input type="hidden" name="operation" value="MOVE_LEFT">
-                            <button class="move-card-button">&#60;=</button>
-                        </form>
-                        <form action="{{ url_for('card.handle', board_id=board.id, card_id=card.id) }}"
+                    <div class="card" data-card-id="{{ card.id }}">
+                        <button class="move-card-button flex-20" data-operation="MOVE_LEFT"
+                            data-board-id="{{ board.id }}" data-card-id="{{ card.id }}">&#60;=
+                        </button>
+                        <form action="{{ url_for('card.show', board_id=board.id, card_id=card.id) }}"
                             class="flex-grow-rest" method="get">
                             <button class="open-card-button">{{ card.title|replace("\n", "<br>")|safe }}</button>
                         </form>
-                        <form action="{{ url_for('card.handle', board_id=board.id, card_id=card.id) }}" method="post"
-                            class="flex-20">
-                            <input type="hidden" name="operation" value="MOVE_RIGHT">
-                            <button class="move-card-button">=&gt;</button>
-                        </form>
+                        <button class="move-card-button flex-20" data-operation="MOVE_RIGHT"
+                            data-board-id="{{ board.id }}" data-card-id="{{ card.id }}">=&gt;
+                        </button>
                     </div>
                     {% endfor %}
                 </div>
@@ -76,13 +70,11 @@
 
                 <div class="scrollable">
                     {% for card in done_cards %}
-                    <div class="card">
-                        <form action="{{ url_for('card.handle', board_id=board.id, card_id=card.id) }}" method="post"
-                            class="flex-20">
-                            <input type="hidden" name="operation" value="MOVE_LEFT">
-                            <button class="move-card-button">&#60;=</button>
-                        </form>
-                        <form action="{{ url_for('card.handle', board_id=board.id, card_id=card.id) }}" method="get"
+                    <div class="card" data-card-id="{{ card.id }}">
+                        <button class="move-card-button flex-20" data-operation="MOVE_LEFT"
+                            data-board-id="{{ board.id }}" data-card-id="{{ card.id }}">&#60;=
+                        </button>
+                        <form action="{{ url_for('card.show', board_id=board.id, card_id=card.id) }}" method="get"
                             class="flex-grow-rest">
                             <button class="open-card-button">{{ card.title|replace("\n", "<br>")|safe }}</button>
                         </form>

@@ -73,6 +73,7 @@ def create_app(test_config=None):
     app.register_blueprint(card.bp)
 
     from .api import board as api_board
+    from .api import card as api_card
     from .api import comment as api_comment
     from .api import membership as api_membership
     from .api import profile as api_profile
@@ -81,6 +82,7 @@ def create_app(test_config=None):
     api_bp.register_blueprint(api_profile.bp)
     api_bp.register_blueprint(api_membership.bp)
     api_bp.register_blueprint(api_comment.bp)
+    api_bp.register_blueprint(api_card.bp)
     app.register_blueprint(api_bp)
 
     from .scripts.commands import init_app, load_data

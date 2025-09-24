@@ -20,15 +20,14 @@
     </form>
 
     <section class="card-info">
-        <form action="{{ url_for('card.create', board_id=board_id) }}" method="post">
+        <form id="create-card-form" data-board-id="{{ board_id }}">
             <textarea class="card-title" name="title" placeholder="Enter title" required></textarea>
             <textarea class="card-content" name="content" placeholder="Enter content"></textarea>
             <button class="board-button">Create</button>
         </form>
-
-        {% for message in get_flashed_messages() %}
-        <div class="flash">{{ message }}</div>
-        {% endfor %}
     </section>
 </main>
+
+<script src="{{ url_for('static', filename='js/card_create.js') }}"></script>
+
 {% endblock %}
