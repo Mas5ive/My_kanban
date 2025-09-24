@@ -63,4 +63,34 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    const deleteBoardButton = document.getElementById('delete-board-button');
+    if (deleteBoardButton) {
+        deleteBoardButton.addEventListener('click', async (event) => {
+            
+            event.preventDefault();
+            const button = event.target;
+            const boardId = button.dataset.boardId;
+
+            if (!confirm('Are you sure you want to delete this board? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/v1/boards/${boardId}`, {
+                    method: 'DELETE',
+                });
+
+                if (response.ok) {
+                    window.location.href = '/profile';
+                } else {
+                    const errorData = await response.json();
+                    alert(errorData.message || 'Failed to delete board.');
+                }
+            } catch (error) {
+                console.error('Error deleting board:', error);
+                alert('A network error occurred. Please try again.');
+            }
+        });
+    }
 });

@@ -109,3 +109,33 @@ document.getElementById('invitations-container').addEventListener('submit', asyn
         alert('A network error occurred. Please try again.');
     }
 });
+
+document.getElementById('create-board-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const form = event.target;
+    const formData = new FormData(form);
+
+    try {
+        const response = await fetch('/api/v1/boards/', {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (response.ok) {
+            form.reset();
+            // Clear and hide board containers before re-fetching
+            document.getElementById('owner-boards-container').innerHTML = '';
+            document.getElementById('owner-boards-section').style.display = 'none';
+            document.getElementById('member-boards-container').innerHTML = '';
+            document.getElementById('member-boards-section').style.display = 'none';
+            fetchAndRenderBoards();
+        } else {
+            const errorData = await response.json();
+            alert(errorData.message || 'An error occurred while creating the board.');
+        }
+    } catch (error) {
+        console.error('Error creating board:', error);
+        alert('A network error occurred. Please try again.');
+    }
+});

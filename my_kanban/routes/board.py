@@ -1,49 +1,28 @@
-from flask import Blueprint, abort, redirect, render_template, request, url_for
+from flask import Blueprint, abort, render_template
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from my_kanban import crud, utils
 
-bp = Blueprint('board', __name__)
+bp = Blueprint('board', __name__, url_prefix='/boards')
 
 
-@bp.route('/boards/<int:board_id>', methods=['GET', 'POST'])
+@bp.route('/<int:board_id>', methods=['GET'])
 @jwt_required()
-def handle(board_id):
+def show(board_id):
     board = crud.get_board(board_id)
 
-    if board is None:
+    if not board:
         abort(404)
 
-    board_links_to_users = crud.get_board_links_to_users(board_id)
     username = get_jwt_identity()
-    user_board_info = next((link for link in board_links_to_users if link.username == username), None)
+    user_link_to_board = crud.get_user_link_to_board(board_id, username)
 
-    if user_board_info is None:
+    if not user_link_to_board:
         abort(403)
-
-    if request.method == 'POST':
-        if user_board_info.is_owner and request.form.get('_method') == 'DELETE':
-            crud.delete_board(board)
-            return redirect(url_for("profile.show"), 303)
-        else:
-            abort(403)
 
     return render_template(
         'board.html',
         board=board,
         grouped_cards=utils.get_card_groups(board.cards),
-        user_board_info=user_board_info
+        user_board_info=user_link_to_board
     )
-
-
-@bp.route('/boards', methods=['POST'])
-@jwt_required()
-def create():
-    board_title = request.form['title']
-
-    if not board_title:
-        return 'The title of the board was not given', 400
-    else:
-        username = get_jwt_identity()
-        crud.create_board(board_title, username)
-        return redirect(url_for("profile.show"), 303)

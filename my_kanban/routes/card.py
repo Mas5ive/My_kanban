@@ -26,7 +26,7 @@ def create(board_id):
 
         if title:
             crud.create_card(board_id, title, content)
-            return redirect(url_for("board.handle", board_id=board_id), 303)
+            return redirect(url_for("board.show", board_id=board_id), 303)
         else:
             flash('Title is required')
 
@@ -54,7 +54,7 @@ def handle(board_id, card_id):
 
             if user_link_to_board.is_owner:
                 crud.delete_card(card)
-                return redirect(url_for("board.handle", board_id=board_id), 303)
+                return redirect(url_for("board.show", board_id=board_id), 303)
             else:
                 abort(403)
 
@@ -63,7 +63,7 @@ def handle(board_id, card_id):
                 crud.move_card(card, operation)
             except ValueError:
                 abort(400)
-            return redirect(url_for("board.handle", board_id=board_id), 303)
+            return redirect(url_for("board.show", board_id=board_id), 303)
 
         elif operation == 'EDIT':
             if not user_link_to_board.is_owner:

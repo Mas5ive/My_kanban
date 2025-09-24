@@ -98,10 +98,10 @@
 
             <div></div>
 
-            <form class="form-container" action="{{ url_for('board.handle', board_id=board.id) }}" method="post">
-                <input type="hidden" name="_method" value="DELETE">
-                <button class="transparent-button">Delete the board</button>
-            </form>
+            <div class="form-container">
+                <button id="delete-board-button" class="transparent-button"
+                    data-board-id="{{ board.id }}">Delete the board</button>
+            </div>
             {% endif %}
 
         </section>
