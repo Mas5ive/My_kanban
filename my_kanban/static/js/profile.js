@@ -17,7 +17,7 @@ function createInvitationElement(invitation) {
     container.textContent = `${invitation.sender} invites you to "${invitation.board_title}" `;
 
     const rejectForm = document.createElement('form');
-    rejectForm.action = "{{ url_for('membership.pick_invitation') }}";
+    rejectForm.action = '/api/v1/profile/invitations';
     rejectForm.method = 'post';
     rejectForm.innerHTML = `
                 <input type="hidden" name="board" value="${invitation.board_id}">
@@ -26,7 +26,7 @@ function createInvitationElement(invitation) {
             `;
 
     const acceptForm = document.createElement('form');
-    acceptForm.action = "{{ url_for('membership.pick_invitation') }}";
+    acceptForm.action = '/api/v1/profile/invitations';
     acceptForm.method = 'post';
     acceptForm.innerHTML = `
                 <input type="hidden" name="board" value="${invitation.board_id}">
@@ -70,4 +70,42 @@ async function fetchAndRenderInvitations() {
 document.addEventListener('DOMContentLoaded', () => {
     fetchAndRenderBoards();
     fetchAndRenderInvitations();
+});
+
+document.getElementById('invitations-container').addEventListener('submit', async (event) => {
+    if (event.target.tagName !== 'FORM') {
+        return;
+    }
+    event.preventDefault();
+
+    const form = event.target;
+    const formData = new FormData(form);
+
+    try {
+        const response = await fetch(form.action, {
+            method: form.method,
+            body: formData,
+        });
+
+        if (response.ok) {
+            const invitationsContainer = document.getElementById('invitations-container');
+            invitationsContainer.innerHTML = '';
+            document.getElementById('invitations-section').style.display = 'none';
+            fetchAndRenderInvitations();
+
+            if (formData.get('operation') === 'accept') {
+                document.getElementById('owner-boards-container').innerHTML = '';
+                document.getElementById('owner-boards-section').style.display = 'none';
+                document.getElementById('member-boards-container').innerHTML = '';
+                document.getElementById('member-boards-section').style.display = 'none';
+                fetchAndRenderBoards();
+            }
+        } else {
+            const errorData = await response.json();
+            alert(errorData.message || 'An error occurred while processing the invitation.');
+        }
+    } catch (error) {
+        console.error('Error processing invitation:', error);
+        alert('A network error occurred. Please try again.');
+    }
 });

@@ -112,14 +112,10 @@
             <div class="scrollable">
                 {% for user in board.users %}
                 {% if user.name != user_board_info.username %}
-                <div class="member">
+                <div class="member" data-username="{{ user.name }}">
                     <p>{{ user.name }}</p>
                     {% if user_board_info.is_owner %}
-                    <form action="{{ url_for('membership.delete_member', board_id=board.id) }}" method="post">
-                        <input type="hidden" name="user" value="{{ user.name }}">
-                        <input type="hidden" name="_method" value="DELETE">
-                        <button class="delete-member-button">Delete</button>
-                    </form>
+                    <button class="delete-member-button" data-board-id="{{ board.id }}" data-username="{{ user.name }}">Delete</button>
                     {% endif %}
                 </div>
                 {% endif %}
@@ -128,21 +124,19 @@
 
             {% if user_board_info.is_owner %}
             <div class="invite">
-                <form action="{{ url_for('membership.сreate_invitation', board_id=board.id) }}" method="post">
+                <form id="invite-form" data-board-id="{{ board.id }}">
                     <label for="username">User:</label>
                     <input type="text" id="recipient" name="recipient" required>
                     <button class="transparent-button">Invite</button>
                 </form>
             </div>
-
-            {% for message in get_flashed_messages() %}
-            <div class="flash">{{ message }}</div>
-            {% endfor %}
             {% endif %}
         </section>
     </main>
 
     <footer></footer>
+
+    <script src="{{ url_for('static', filename='js/board.js') }}"></script>
 
 </body>
 

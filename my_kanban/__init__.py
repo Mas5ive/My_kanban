@@ -66,17 +66,18 @@ def create_app(test_config=None):
     jwt.init_app(app)
     alembic.init_app(app)
 
-    from .routes import auth, board, card, comment, membership, profile
+    from .routes import auth, board, card, comment, profile
     app.register_blueprint(auth.bp)
     app.register_blueprint(profile.bp)
     app.register_blueprint(board.bp)
-    app.register_blueprint(membership.bp)
     app.register_blueprint(card.bp)
     app.register_blueprint(comment.bp)
 
+    from .api import membership as api_membership
     from .api import profile as api_profile
     api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
     api_bp.register_blueprint(api_profile.bp)
+    api_bp.register_blueprint(api_membership.bp)
     app.register_blueprint(api_bp)
 
     from .scripts.commands import init_app, load_data
