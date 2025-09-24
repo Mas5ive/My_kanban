@@ -45,28 +45,19 @@
 
     <section class="comments">
         <h2>Comments</h2>
-        <div class="scrollable">
-            {% for comment in card.comments %}
-            <div class="comment">
-                <p>{{ comment.author }} ({{comment.date.strftime('%Y-%m-%d %H:%M') }})</p>
-                <p>{{ comment.content|replace("\n", "<br>")|safe }}</p>
-                {% if comment.author == user_info.username %}
-                <form
-                    action="{{ url_for('comment.delete', board_id=board_id, card_id=card.id, comment_id=comment.id) }}"
-                    method="post">
-                    <input type="hidden" name="_method" value="DELETE">
-                    <button class="delete-comment-button">Delete</button>
-                    <div style="clear: both;"></div>
-                </form>
-                {% endif %}
-            </div>
-            {% endfor %}
-
-            <form action="{{ url_for('comment.create', board_id=board_id, card_id=card.id) }}" method="post">
-                <textarea class="comment-input" name="content" placeholder="Enter a comment"></textarea>
-                <button class="submit-button">Send</button>
-            </form>
+        <div class="scrollable"
+             data-board-id="{{ board_id }}"
+             data-card-id="{{ card.id }}"
+             data-current-username="{{ user_info.username }}">
         </div>
+        <form id="create-comment-form">
+            <textarea class="comment-input" name="content" placeholder="Enter a comment" required></textarea>
+            <button class="submit-button">Send</button>
+        </form>
     </section>
+
 </main>
+
+<script src="{{ url_for('static', filename='js/comment.js') }}"></script>
+
 {% endblock %}
