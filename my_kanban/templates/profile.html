@@ -16,18 +16,10 @@
     </header>
 
     <main>
-        {% if owner_boards %}
-        <section>
+        <section id="owner-boards-section" style="display: none;">
             <h2>Your boards</h2>
-            <div class="line-block">
-                {% for board in owner_boards %}
-                <form action="{{ url_for('board.handle', board_id=board.id) }}" method="get">
-                    <button class="board-button">{{ board.title }}</button>
-                </form>
-                {% endfor %}
-            </div>
+            <div class="line-block" id="owner-boards-container"></div>
         </section>
-        {% endif %}
 
         <section>
             <h3>Create a new board</h3>
@@ -40,44 +32,22 @@
             </form>
         </section>
 
-        {% if invitations %}
-        <section>
+        <section id="invitations-section" style="display: none;">
             <h2>Invitations</h2>
-            {% for invitation, board_title in invitations %}
-            <div class="line-block">
-                {{ invitation.user_sender }} invites you to "{{ board_title }}"
-                <form action="{{ url_for('membership.pick_invitation') }}" method="post">
-                    <input type="hidden" name="board" value="{{ invitation.board_id }}">
-                    <input type="hidden" name="operation" value="reject">
-                    <button class="transparent-button" type="submit">Reject</button>
-                </form>
-                <form action="{{ url_for('membership.pick_invitation') }}" method="post">
-                    <input type="hidden" name="board" value="{{ invitation.board_id }}">
-                    <input type="hidden" name="operation" value="accept">
-                    <button class="transparent-button" type="submit">Accept</button>
-                </form>
-            </div>
-            {% endfor %}
+            <div id="invitations-container"></div>
         </section>
-        {% endif %}
 
 
-        {% if invitation_boards %}
-        <section>
+        <section id="member-boards-section" style="display: none;">
             <h2>You're a member of</h2>
-            <div class="line-block">
-                {% for board in invitation_boards %}
-                <form action="{{ url_for('board.handle', board_id=board.id) }}" method="get">
-                    <button class="board-button">{{ board.title }}</button>
-                </form>
-                {% endfor %}
-            </div>
+            <div class="line-block" id="member-boards-container"></div>
         </section>
-        {% endif %}
 
     </main>
 
     <footer></footer>
+
+    <script src="{{ url_for('static', filename='js/profile.js') }}"></script>
 
 </body>
 

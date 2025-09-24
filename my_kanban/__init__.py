@@ -1,7 +1,7 @@
 import os
 from datetime import datetime, timedelta, timezone
 
-from flask import Flask, flash, redirect, render_template, url_for
+from flask import Blueprint, Flask, flash, redirect, render_template, url_for
 from flask_alembic import Alembic
 from flask_jwt_extended import (JWTManager, create_access_token, get_jwt,
                                 get_jwt_identity, set_access_cookies)
@@ -73,6 +73,11 @@ def create_app(test_config=None):
     app.register_blueprint(membership.bp)
     app.register_blueprint(card.bp)
     app.register_blueprint(comment.bp)
+
+    from .api import profile as api_profile
+    api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
+    api_bp.register_blueprint(api_profile.bp)
+    app.register_blueprint(api_bp)
 
     from .scripts.commands import init_app, load_data
     init_app(app)

@@ -29,7 +29,7 @@ def split_boards(boards_info: Sequence[Row]) -> dict[str, list[Board]]:
                      a Board object and an is_owner flag.
 
     Returns:
-        A dictionary with two keys: 'owner boards' and 'invitation boards',
+        A dictionary with two keys: 'owner boards' and 'member boards',
         each containing a list of Board objects.
     """
     boards = defaultdict(list)
@@ -37,5 +37,5 @@ def split_boards(boards_info: Sequence[Row]) -> dict[str, list[Board]]:
         if is_owner:
             boards['owner boards'].append(board)
         else:
-            boards['invitation boards'].append(board)
+            boards['member boards'].append(board)
     return boards
