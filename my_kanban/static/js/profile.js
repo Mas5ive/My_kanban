@@ -1,3 +1,5 @@
+import { getProfileBoards, getProfileInvitations, processInvitation, createBoard } from './apiService.js';
+
 function createBoardElement(board) {
     const form = document.createElement('form');
     form.action = `/boards/${board.id}`;
@@ -16,126 +18,88 @@ function createInvitationElement(invitation) {
     container.className = 'line-block';
     container.textContent = `${invitation.sender} invites you to "${invitation.board_title}" `;
 
-    const rejectForm = document.createElement('form');
-    rejectForm.action = '/api/v1/profile/invitations';
-    rejectForm.method = 'post';
-    rejectForm.innerHTML = `
-                <input type="hidden" name="board" value="${invitation.board_id}">
-                <input type="hidden" name="operation" value="reject">
-                <button class="transparent-button" type="submit">Reject</button>
-            `;
-
-    const acceptForm = document.createElement('form');
-    acceptForm.action = '/api/v1/profile/invitations';
-    acceptForm.method = 'post';
-    acceptForm.innerHTML = `
-                <input type="hidden" name="board" value="${invitation.board_id}">
-                <input type="hidden" name="operation" value="accept">
-                <button class="transparent-button" type="submit">Accept</button>
-            `;
-
-    container.appendChild(rejectForm);
-    container.appendChild(acceptForm);
+    ['reject', 'accept'].forEach(operation => {
+        const form = document.createElement('form');
+        form.className = 'invitation-form';
+        form.innerHTML = `
+            <input type="hidden" name="board" value="${invitation.board_id}">
+            <input type="hidden" name="operation" value="${operation}">
+            <button class="transparent-button" type="submit">${operation}</button>
+        `;
+        container.appendChild(form);
+    });
     return container;
 }
 
-async function fetchAndRenderBoards() {
-    const response = await fetch('/api/v1/profile/boards');
-    const data = await response.json();
+function renderBoards(boardsData) {
+    ['owner', 'member'].forEach(key => {
+        const container = document.getElementById(`${key}-boards-container`);
+        const section = document.getElementById(`${key}-boards-section`);
 
-    const ownerContainer = document.getElementById('owner-boards-container');
-    if (data.owner_boards.length > 0) {
-        document.getElementById('owner-boards-section').style.display = 'block';
-        data.owner_boards.forEach(board => ownerContainer.appendChild(createBoardElement(board)));
-    }
+        if (!container || !section) return;
 
-    const memberContainer = document.getElementById('member-boards-container');
-    if (data.member_boards.length > 0) {
-        document.getElementById('member-boards-section').style.display = 'block';
-        data.member_boards.forEach(board => memberContainer.appendChild(createBoardElement(board)));
-    }
+        container.innerHTML = '';
+        section.style.display = 'none';
+
+        if (boardsData[`${key}_boards`].length > 0) {
+            section.style.display = 'block';
+            boardsData[`${key}_boards`].forEach(board => container.appendChild(createBoardElement(board)));
+        }
+    });
 }
 
-async function fetchAndRenderInvitations() {
-    const response = await fetch('/api/v1/profile/invitations');
-    const invitations = await response.json();
-
+function renderInvitations(invitationsData) {
     const container = document.getElementById('invitations-container');
-    if (invitations.length > 0) {
-        document.getElementById('invitations-section').style.display = 'block';
-        invitations.forEach(inv => container.appendChild(createInvitationElement(inv)));
+    const section = document.getElementById('invitations-section');
+
+    if (!container || !section) return;
+
+    container.innerHTML = '';
+    section.style.display = 'none';
+
+    if (invitationsData.length > 0) {
+        section.style.display = 'block';
+        invitationsData.forEach(inv => container.appendChild(createInvitationElement(inv)));
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    fetchAndRenderBoards();
-    fetchAndRenderInvitations();
-});
 
-document.getElementById('invitations-container').addEventListener('submit', async (event) => {
-    if (event.target.tagName !== 'FORM') {
-        return;
-    }
-    event.preventDefault();
+document.addEventListener('DOMContentLoaded', async () => {
+    const boardsData = await getProfileBoards();
+    renderBoards(boardsData);
+    const invitationsData = await getProfileInvitations();
+    renderInvitations(invitationsData);
 
-    const form = event.target;
-    const formData = new FormData(form);
+    // Event delegation for invitation forms (Accept/Reject)
+    const invitationsContainer = document.getElementById('invitations-container');
+    if (invitationsContainer) {
+        invitationsContainer.addEventListener('submit', async (event) => {
 
-    try {
-        const response = await fetch(form.action, {
-            method: form.method,
-            body: formData,
-        });
+            if (!event.target.classList.contains('invitation-form')) {
+                return;
+            }
 
-        if (response.ok) {
-            const invitationsContainer = document.getElementById('invitations-container');
-            invitationsContainer.innerHTML = '';
-            document.getElementById('invitations-section').style.display = 'none';
-            fetchAndRenderInvitations();
+            event.preventDefault();
+            const form = event.target;
+            await processInvitation(form);
+            const updatedInvitations = await getProfileInvitations();
+            renderInvitations(updatedInvitations);
+            const formData = new FormData(form);
 
             if (formData.get('operation') === 'accept') {
-                document.getElementById('owner-boards-container').innerHTML = '';
-                document.getElementById('owner-boards-section').style.display = 'none';
-                document.getElementById('member-boards-container').innerHTML = '';
-                document.getElementById('member-boards-section').style.display = 'none';
-                fetchAndRenderBoards();
+                const updatedBoards = await getProfileBoards();
+                renderBoards(updatedBoards);
             }
-        } else {
-            const errorData = await response.json();
-            alert(errorData.message || 'An error occurred while processing the invitation.');
-        }
-    } catch (error) {
-        console.error('Error processing invitation:', error);
-        alert('A network error occurred. Please try again.');
-    }
-});
-
-document.getElementById('create-board-form').addEventListener('submit', async (event) => {
-    event.preventDefault();
-
-    const form = event.target;
-    const formData = new FormData(form);
-
-    try {
-        const response = await fetch('/api/v1/boards/', {
-            method: 'POST',
-            body: formData,
         });
-
-        if (response.ok) {
-            form.reset();
-            // Clear and hide board containers before re-fetching
-            document.getElementById('owner-boards-container').innerHTML = '';
-            document.getElementById('owner-boards-section').style.display = 'none';
-            document.getElementById('member-boards-container').innerHTML = '';
-            document.getElementById('member-boards-section').style.display = 'none';
-            fetchAndRenderBoards();
-        } else {
-            const errorData = await response.json();
-            alert(errorData.message || 'An error occurred while creating the board.');
-        }
-    } catch (error) {
-        console.error('Error creating board:', error);
-        alert('A network error occurred. Please try again.');
     }
+
+    // Event listener for creating a new board
+    document.getElementById('create-board-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.target;
+        await createBoard(form);
+        const updatedBoards = await getProfileBoards();
+        renderBoards(updatedBoards);
+        form.reset();
+    });
 });

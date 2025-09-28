@@ -1,15 +1,11 @@
+import { getComments, createComment, deleteComment } from './apiService.js';
+import { formatDate, nl2br } from './utils.js';
+
 function createCommentElement(comment, boardId, cardId, currentUsername) {
     const commentDiv = document.createElement('div');
     commentDiv.className = 'comment';
     commentDiv.dataset.commentId = comment.id;
-
-    const date = new Date(comment.date).toLocaleString('sv-SE', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+    const formattedDate = formatDate(comment.date);
 
     const authorP = document.createElement('p');
     authorP.textContent = `${comment.author} (${formattedDate})`;
@@ -37,80 +33,49 @@ function createCommentElement(comment, boardId, cardId, currentUsername) {
     return commentDiv;
 }
 
-async function fetchAndRenderComments(commentsContainer, boardId, cardId, currentUsername) {
-    try {
-        const response = await fetch(`/api/v1/boards/${boardId}/cards/${cardId}/comments/`);
-        if (!response.ok) {
-            throw new Error('Failed to fetch comments');
-        }
-        const comments = await response.json();
-        commentsContainer.innerHTML = ''
-        comments.forEach(comment => {
-            const commentElement = createCommentElement(comment, boardId, cardId, currentUsername);
-            commentsContainer.appendChild(commentElement);
-        });
-    } catch (error) {
-        console.error('Error fetching comments:', error);
-        alert('Could not load comments.');
-    }
+function renderComments(commentsContainer, comments, boardId, cardId, currentUsername) {
+    commentsContainer.innerHTML = ''
+    comments.forEach(comment => {
+        const commentElement = createCommentElement(comment, boardId, cardId, currentUsername);
+        commentsContainer.appendChild(commentElement);
+    });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const commentsSection = document.querySelector('.comments');
+
     if (!commentsSection) return;
 
     const commentsContainer = document.querySelector('.comments .scrollable');
     const { boardId, cardId, currentUsername } = commentsContainer.dataset;
+    const comments = await getComments(boardId, cardId);
+    renderComments(commentsContainer, comments, boardId, cardId, currentUsername);
 
-    if (commentsContainer && boardId && cardId && currentUsername) {
-        fetchAndRenderComments(commentsContainer, boardId, cardId, currentUsername);
-    }
 
+    // Event listener for creating a new comment
     const createCommentForm = document.getElementById('create-comment-form');
     if (createCommentForm) {
         createCommentForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             const form = event.target;
-            const formData = new FormData(form);
-
-            try {
-                const response = await fetch(`/api/v1/boards/${boardId}/cards/${cardId}/comments/`, {
-                    method: 'POST',
-                    body: formData,
-                });
-
-                if (response.ok) {
-                    form.reset();
-                    await fetchAndRenderComments(commentsContainer, boardId, cardId, currentUsername);
-                } else {
-                    const errorData = await response.json();
-                    alert(errorData.message || 'Failed to create comment.');
-                }
-            } catch (error) {
-                console.error('Error creating comment:', error);
-                alert('A network error occurred. Please try again.');
-            }
+            await createComment(boardId, cardId, form);
+            form.reset();
+            const comments = await getComments(boardId, cardId);
+            renderComments(commentsContainer, comments, boardId, cardId, currentUsername);
         });
     }
 
+    // Event listener for deleting a comment
     if (commentsContainer) {
         commentsContainer.addEventListener('submit', async (event) => {
+
             if (!event.target.classList.contains('delete-comment-form')) return;
 
             event.preventDefault();
             const form = event.target;
             const { boardId, cardId, commentId } = form.dataset;
-
-            const response = await fetch(`/api/v1/boards/${boardId}/cards/${cardId}/comments/${commentId}`, {
-                method: 'DELETE',
-            });
-
-            if (response.ok) {
-                form.closest('.comment').remove();
-            } else {
-                const errorData = await response.json();
-                alert(errorData.message || 'Failed to delete comment.');
-            }
+            await deleteComment(boardId, cardId, commentId);
+            form.closest('.comment').remove();
         });
     }
 });

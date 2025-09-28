@@ -1,3 +1,6 @@
+import { moveCard, inviteMember, deleteMember, deleteBoard } from './apiService.js';
+import { nl2br } from './utils.js';
+
 function createCardElement(cardId, cardTitle, boardId, columnIndex) {
     const cardDiv = document.createElement('div');
     cardDiv.className = 'card';
@@ -10,7 +13,7 @@ function createCardElement(cardId, cardTitle, boardId, columnIndex) {
 
     const openButton = document.createElement('button');
     openButton.className = 'open-card-button';
-    openButton.innerHTML = cardTitle.replace(/\n/g, "<br>");
+    openButton.innerHTML = nl2br(cardTitle);
     openForm.appendChild(openButton);
 
     const createMoveButton = (operation, text) => {
@@ -48,9 +51,11 @@ function updateColumnCounter(column) {
 
 document.addEventListener('DOMContentLoaded', () => {
 
+    // Event listener for moving cards
     const board = document.querySelector('.board');
     if (board) {
         board.addEventListener('click', async (event) => {
+
             if (!event.target.classList.contains('move-card-button')) {
                 return;
             }
@@ -58,56 +63,39 @@ document.addEventListener('DOMContentLoaded', () => {
             event.preventDefault();
             const button = event.target;
             const { boardId, cardId, operation } = button.dataset;
+            await moveCard(boardId, cardId, operation);
+            const oldCardElement = button.closest('.card');
+            const cardTitle = oldCardElement.querySelector('.open-card-button').innerHTML;
+            const currentColumn = oldCardElement.closest('.column');
+            const columns = Array.from(board.querySelectorAll('.column'));
+            const currentColumnIndex = columns.indexOf(currentColumn);
 
-            const formData = new FormData();
-            formData.append('operation', operation);
+            let targetColumnIndex;
 
-            try {
-                const response = await fetch(`/api/v1/boards/${boardId}/cards/${cardId}`, {
-                    method: 'POST',
-                    body: formData,
-                });
+            if (operation === 'MOVE_RIGHT') {
+                targetColumnIndex = currentColumnIndex + 1;
+            } else if (operation === 'MOVE_LEFT') {
+                targetColumnIndex = currentColumnIndex - 1;
+            }
 
-                if (response.ok) {
-                    const oldCardElement = button.closest('.card');
-                    const cardTitle = oldCardElement.querySelector('.open-card-button').innerHTML;
-                    const currentColumn = oldCardElement.closest('.column');
-                    const columns = Array.from(board.querySelectorAll('.column'));
-                    const currentColumnIndex = columns.indexOf(currentColumn);
+            const targetColumn = columns[targetColumnIndex];
 
-                    let targetColumnIndex;
-                    if (operation === 'MOVE_RIGHT') {
-                        targetColumnIndex = currentColumnIndex + 1;
-                    } else if (operation === 'MOVE_LEFT') {
-                        targetColumnIndex = currentColumnIndex - 1;
-                    }
-
-                    const targetColumn = columns[targetColumnIndex];
-
-                    if (targetColumn) {
-                        oldCardElement.remove();
-                        const newCardElement = createCardElement(cardId, cardTitle, boardId, targetColumnIndex);
-                        const scrollableArea = targetColumn.querySelector('.scrollable');
-                        scrollableArea.appendChild(newCardElement);
-
-                        updateColumnCounter(currentColumn);
-                        updateColumnCounter(targetColumn);
-                    }
-                } else {
-                    const errorData = await response.json();
-                    alert(errorData.message || 'Failed to move card.');
-                }
-            } catch (error) {
-                console.error('Error moving card:', error);
-                alert('A network error occurred. Please try again.');
+            if (targetColumn) {
+                oldCardElement.remove();
+                const newCardElement = createCardElement(cardId, cardTitle, boardId, targetColumnIndex);
+                const scrollableArea = targetColumn.querySelector('.scrollable');
+                scrollableArea.appendChild(newCardElement);
+                updateColumnCounter(currentColumn);
+                updateColumnCounter(targetColumn);
             }
         });
     }
 
-
+    // Event listener for deleting members
     const membersContainer = document.querySelector('.members .scrollable');
     if (membersContainer) {
         membersContainer.addEventListener('click', async (event) => {
+
             if (!event.target.classList.contains('delete-member-button')) {
                 return;
             }
@@ -121,81 +109,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            try {
-                const response = await fetch(`/api/v1/boards/${boardId}/users/${username}`, {
-                    method: 'DELETE',
-                });
-
-                if (response.ok) {
-                    button.closest('.member').remove();
-                } else {
-                    const errorData = await response.json();
-                    alert(errorData.message || 'Failed to remove member.');
-                }
-            } catch (error) {
-                console.error('Error removing member:', error);
-                alert('A network error occurred. Please try again.');
-            }
+            await deleteMember(boardId, username);
+            button.closest('.member').remove();
         });
     }
 
+    // Event listener for inviting members
     const inviteForm = document.getElementById('invite-form');
     if (inviteForm) {
         inviteForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-
             const form = event.target;
-            const formData = new FormData(form);
             const boardId = form.dataset.boardId;
-
-            try {
-                const response = await fetch(`/api/v1/boards/${boardId}/invitations`, {
-                    method: 'POST',
-                    body: formData,
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    alert(result.message);
-                    form.reset();
-                } else {
-                    alert(result.message || 'Failed to send invitation.');
-                }
-            } catch (error) {
-                console.error('Error sending invitation:', error);
-                alert('A network error occurred. Please try again.');
-            }
+            const result = await inviteMember(boardId, form);
+            form.reset();
+            alert(result.message);
         });
     }
 
+    // Event listener for deleting board
     const deleteBoardButton = document.getElementById('delete-board-button');
     if (deleteBoardButton) {
         deleteBoardButton.addEventListener('click', async (event) => {
-
-            event.preventDefault();
-            const button = event.target;
-            const boardId = button.dataset.boardId;
 
             if (!confirm('Are you sure you want to delete this board? This action cannot be undone.')) {
                 return;
             }
 
-            try {
-                const response = await fetch(`/api/v1/boards/${boardId}`, {
-                    method: 'DELETE',
-                });
-
-                if (response.ok) {
-                    window.location.href = '/profile';
-                } else {
-                    const errorData = await response.json();
-                    alert(errorData.message || 'Failed to delete board.');
-                }
-            } catch (error) {
-                console.error('Error deleting board:', error);
-                alert('A network error occurred. Please try again.');
-            }
+            event.preventDefault();
+            const button = event.target;
+            const boardId = button.dataset.boardId;
+            await deleteBoard(boardId);
+            window.location.href = '/profile';
         });
     }
 });
