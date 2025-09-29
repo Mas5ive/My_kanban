@@ -1,90 +1,63 @@
 import { moveCard, inviteMember, deleteMember, deleteBoard } from './apiService.js';
-import { nl2br } from './utils.js';
 
-function createCardElement(cardId, cardTitle, boardId, columnIndex) {
-    const cardDiv = document.createElement('div');
-    cardDiv.className = 'card';
-    cardDiv.dataset.cardId = cardId;
 
-    const openForm = document.createElement('form');
-    openForm.action = `/boards/${boardId}/cards/${cardId}`;
-    openForm.method = 'get';
-    openForm.className = 'flex-grow-rest';
+function updateMoveButtons(cardElement) {
+    const column = cardElement.closest('.column');
 
-    const openButton = document.createElement('button');
-    openButton.className = 'open-card-button';
-    openButton.innerHTML = nl2br(cardTitle);
-    openForm.appendChild(openButton);
+    if (!column) return;
 
-    const createMoveButton = (operation, text) => {
-        const button = document.createElement('button');
-        button.className = 'move-card-button flex-20';
-        button.dataset.operation = operation;
-        button.dataset.boardId = boardId;
-        button.dataset.cardId = cardId;
-        button.innerHTML = text;
-        return button;
-    };
+    const moveLeftButton = cardElement.querySelector('.move-card-button[data-operation="MOVE_LEFT"]');
+    const moveRightButton = cardElement.querySelector('.move-card-button[data-operation="MOVE_RIGHT"]');
 
-    // columnIndex: 0 = Backlog, 1 = In progress, 2 = Done
-    if (columnIndex === 0) { // Backlog
-        cardDiv.appendChild(openForm);
-        cardDiv.appendChild(createMoveButton('MOVE_RIGHT', '=&gt;'));
-    } else if (columnIndex === 1) { // In progress
-        cardDiv.appendChild(createMoveButton('MOVE_LEFT', '&#60;='));
-        cardDiv.appendChild(openForm);
-        cardDiv.appendChild(createMoveButton('MOVE_RIGHT', '=&gt;'));
-    } else if (columnIndex === 2) { // Done
-        cardDiv.appendChild(createMoveButton('MOVE_LEFT', '&#60;='));
-        cardDiv.appendChild(openForm);
+    if (moveLeftButton) {
+        moveLeftButton.style.display = column.previousElementSibling?.classList.contains('column') ? 'block' : 'none';
     }
 
-    return cardDiv;
+    if (moveRightButton) {
+        moveRightButton.style.display = column.nextElementSibling?.classList.contains('column') ? 'block' : 'none';
+    }
 }
 
 function updateColumnCounter(column) {
     const counter = column.querySelector('h2');
     const cardCount = column.querySelectorAll('.card').length;
-    counter.textContent = counter.textContent.replace(/\[\d+\]/, `[${cardCount}]`);
+
+    if (counter) {
+        counter.textContent = counter.textContent.replace(/\[\d*\]/, `[${cardCount}]`);
+    }
 }
 
 
 document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.card').forEach(updateMoveButtons);
 
     // Event listener for moving cards
     const board = document.querySelector('.board');
     if (board) {
         board.addEventListener('click', async (event) => {
+            const button = event.target.closest('.move-card-button');
 
-            if (!event.target.classList.contains('move-card-button')) {
-                return;
-            }
+            if (!button) return;
 
             event.preventDefault();
-            const button = event.target;
             const { boardId, cardId, operation } = button.dataset;
             await moveCard(boardId, cardId, operation);
-            const oldCardElement = button.closest('.card');
-            const cardTitle = oldCardElement.querySelector('.open-card-button').innerHTML;
-            const currentColumn = oldCardElement.closest('.column');
+            const cardElement = button.closest('.card');
+            const currentColumn = cardElement.closest('.column');
             const columns = Array.from(board.querySelectorAll('.column'));
             const currentColumnIndex = columns.indexOf(currentColumn);
 
-            let targetColumnIndex;
+            let targetColumn;
 
             if (operation === 'MOVE_RIGHT') {
-                targetColumnIndex = currentColumnIndex + 1;
+                targetColumn = columns[currentColumnIndex + 1];
             } else if (operation === 'MOVE_LEFT') {
-                targetColumnIndex = currentColumnIndex - 1;
+                targetColumn = columns[currentColumnIndex - 1];
             }
 
-            const targetColumn = columns[targetColumnIndex];
-
-            if (targetColumn) {
-                oldCardElement.remove();
-                const newCardElement = createCardElement(cardId, cardTitle, boardId, targetColumnIndex);
-                const scrollableArea = targetColumn.querySelector('.scrollable');
-                scrollableArea.appendChild(newCardElement);
+            if (targetColumn && cardElement) {
+                targetColumn.querySelector('.scrollable').appendChild(cardElement);
+                updateMoveButtons(cardElement);
                 updateColumnCounter(currentColumn);
                 updateColumnCounter(targetColumn);
             }

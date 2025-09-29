@@ -1,4 +1,33 @@
 <!DOCTYPE html>
+
+
+{% macro render_card(card, board_id) %}
+<div class="card" data-card-id="{{ card.id }}">
+    <button class="move-card-button flex-20" data-operation="MOVE_LEFT" data-board-id="{{ board_id }}"
+        data-card-id="{{ card.id }}">&#60;=</button>
+    <form action="{{ url_for('card.show', board_id=board_id, card_id=card.id) }}" method="get"
+        class="flex-grow-rest">
+        <button class="open-card-button">{{ card.title }}</button>
+    </form>
+    <button class="move-card-button flex-20" data-operation="MOVE_RIGHT" data-board-id="{{ board_id }}"
+        data-card-id="{{ card.id }}">=&gt;</button>
+</div>
+{% endmacro %}
+
+{% macro render_column(title, cards, board_id) %}
+<div class="column">
+    <h2>{{ title }} [{{ cards|length }}]</h2>
+    <div class="scrollable">
+        {% for card in cards %}
+        {{ render_card(card, board_id) }}
+        {% endfor %}
+    </div>
+</div>
+{% endmacro %}
+
+
+
+
 <html lang="en">
 
 <head>
@@ -23,65 +52,9 @@
     <main>
         <section class="board">
 
-            <div class="column">
-                {% set backlog_cards = grouped_cards.get(0, []) %}
-                <h2>Backlog [{{ backlog_cards|length }}]</h2>
-
-                <div class="scrollable">
-                    {% for card in backlog_cards %}
-                    <div class="card" data-card-id="{{ card.id }}">
-                        <form action="{{ url_for('card.show', board_id=board.id, card_id=card.id) }}" method="get"
-                            class="flex-grow-rest">
-                            <button class="open-card-button">{{ card.title }}</button>
-                        </form>
-                        <button class="move-card-button flex-20" data-operation="MOVE_RIGHT"
-                            data-board-id="{{ board.id }}" data-card-id="{{ card.id }}">=&gt;
-                        </button>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div class="column">
-                {% set in_progress_cards = grouped_cards.get(1, []) %}
-                <h2>In progress [{{ in_progress_cards|length }}]</h2>
-
-                <div class="scrollable">
-                    {% for card in in_progress_cards %}
-                    <div class="card" data-card-id="{{ card.id }}">
-                        <button class="move-card-button flex-20" data-operation="MOVE_LEFT"
-                            data-board-id="{{ board.id }}" data-card-id="{{ card.id }}">&#60;=
-                        </button>
-                        <form action="{{ url_for('card.show', board_id=board.id, card_id=card.id) }}"
-                            class="flex-grow-rest" method="get">
-                            <button class="open-card-button">{{ card.title }}</button>
-                        </form>
-                        <button class="move-card-button flex-20" data-operation="MOVE_RIGHT"
-                            data-board-id="{{ board.id }}" data-card-id="{{ card.id }}">=&gt;
-                        </button>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div class="column">
-                {% set done_cards = grouped_cards.get(2, []) %}
-                <h2>Done [{{ done_cards|length }}]</h2>
-
-                <div class="scrollable">
-                    {% for card in done_cards %}
-                    <div class="card" data-card-id="{{ card.id }}">
-                        <button class="move-card-button flex-20" data-operation="MOVE_LEFT"
-                            data-board-id="{{ board.id }}" data-card-id="{{ card.id }}">&#60;=
-                        </button>
-                        <form action="{{ url_for('card.show', board_id=board.id, card_id=card.id) }}" method="get"
-                            class="flex-grow-rest">
-                            <button class="open-card-button">{{ card.title }}</button>
-                        </form>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
+            {{ render_column('Backlog', grouped_cards.get(0, []), board.id) }}
+            {{ render_column('In progress', grouped_cards.get(1, []), board.id) }}
+            {{ render_column('Done', grouped_cards.get(2, []), board.id) }}
 
             {% if user_board_info.is_owner %}
             <form class="form-container" action="{{ url_for('card.create', board_id=board.id) }}" method="get">
