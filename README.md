@@ -16,7 +16,7 @@ A simple multi-user kanban application written in python 3.10 using the Flask 3.
 
 - SQLite3 database is used
 - JWT technology is used
-- frontend is written in a minimalistic way, without using JS
+- frontend is written in vanilla JS
 - there are no unit tests
 
 ## Installation
