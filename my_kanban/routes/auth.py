@@ -63,7 +63,7 @@ def login():
     return render_template('auth/login.html')
 
 
-@bp.route('/logout')
+@bp.route('/logout', methods=['POST'])
 def logout():
     response = redirect(url_for("auth.login"))
     unset_jwt_cookies(response)
