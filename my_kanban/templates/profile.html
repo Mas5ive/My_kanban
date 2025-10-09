@@ -10,6 +10,7 @@
 <body>
     <header>
         <form action="{{ url_for('auth.logout') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <button class="transparent-button">Log out</button>
         </form>
         <h1>{{ username }}</h1>

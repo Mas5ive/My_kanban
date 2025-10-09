@@ -1,14 +1,17 @@
 import os
 from datetime import datetime, timedelta, timezone
 
-from flask import Blueprint, Flask, flash, redirect, render_template, url_for
+from flask import (Blueprint, Flask, flash, jsonify, redirect, render_template,
+                   request, url_for)
 from flask_alembic import Alembic
 from flask_jwt_extended import (JWTManager, create_access_token, get_jwt,
                                 get_jwt_identity, set_access_cookies)
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf.csrf import CSRFError, CSRFProtect
 
 sqla = SQLAlchemy()
 jwt = JWTManager()
+csrf = CSRFProtect()
 alembic = Alembic()
 
 
@@ -24,6 +27,13 @@ def create_app(test_config=None):
         JWT_ACCESS_TOKEN_EXPIRES=timedelta(weeks=1),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
     )
+
+    @app.errorhandler(CSRFError)
+    def handle_csrf_error(error):
+        if request.path.startswith('/api/'):
+            return jsonify({'message': error.description}), error.code
+        else:
+            return error.get_response()
 
     @jwt.expired_token_loader
     def expired_token_callback(jwt_header, jwt_payload):
@@ -65,6 +75,7 @@ def create_app(test_config=None):
     sqla.init_app(app)
     jwt.init_app(app)
     alembic.init_app(app)
+    csrf.init_app(app)
 
     from .routes import auth, board, card, profile
     app.register_blueprint(auth.bp)

@@ -10,6 +10,15 @@ class APIError extends Error {
 
 async function apiFetch(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const method = options.method ? options.method.toUpperCase() : 'GET';
+
+    if (!['GET', 'HEAD', 'OPTIONS', 'TRACE'].includes(method)) {
+        options.headers = {
+            'X-CSRFToken': csrfToken,
+        };
+    }
+
     const response = await fetch(url, options);
 
     if (!response.ok) {
