@@ -60,7 +60,7 @@ export async function createCard(boardId, form) {
 export async function editCard(boardId, cardId, form) {
     const formData = new FormData(form);
     return apiFetch(`/boards/${boardId}/cards/${cardId}`, {
-        method: 'POST',
+        method: 'PATCH',
         body: formData,
     });
 }
@@ -69,7 +69,7 @@ export async function moveCard(boardId, cardId, operation) {
     const formData = new FormData();
     formData.append('operation', operation);
     return apiFetch(`/boards/${boardId}/cards/${cardId}`, {
-        method: 'POST',
+        method: 'PATCH',
         body: formData,
     });
 }

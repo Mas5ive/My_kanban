@@ -30,7 +30,7 @@ def create(board_id):
     return jsonify({'message': 'Card created successfully'}), 201
 
 
-@bp.route('/<int:card_id>', methods=['POST'])
+@bp.route('/<int:card_id>', methods=['PATCH'])
 @jwt_required()
 def change(board_id, card_id):
     username = get_jwt_identity()
