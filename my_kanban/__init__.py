@@ -35,6 +35,21 @@ def create_app(test_config=None):
         else:
             return error.get_response()
 
+    @app.after_request
+    def handle_headers(response):
+        response.headers['Content-Security-Policy'] = (
+            "default-src 'self'; "
+            "script-src 'self'; "
+            "style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; "  # 'unsafe-inline' for simple styles
+            "font-src 'self' https://fonts.gstatic.com; "
+            "img-src 'self' data:; "
+            "media-src 'self' data:;"
+        )
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'  # Prevent Clickjacking
+        response.headers['X-Content-Type-Options'] = 'nosniff'  # Prevent MIME-sniffing
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'  # Control referrer information
+        return response
+
     @jwt.expired_token_loader
     def expired_token_callback(jwt_header, jwt_payload):
         flash('Your session has expired. Please log in again.', 'warning')
